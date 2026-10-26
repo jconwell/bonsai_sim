@@ -1,0 +1,7 @@
+# Archives
+*.zip
+
+# macOS
+.DS_Store
+__MACOSX/
+._*
