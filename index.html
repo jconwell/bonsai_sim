@@ -3,12 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bonsai</title>
+  <title>Bonsai 3D</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main id="stage">
     <canvas id="canvas"></canvas>
+    <div id="banner" hidden><div class="b-title"></div><div class="b-sub"></div></div>
+    <div id="repotBar" hidden>
+      <div><b>Repotting</b> · click a root to cut it · drag a root to swing it around the trunk · drag empty space to rotate</div>
+      <button id="repotDone" class="primary">Done</button>
+      <button id="repotCancel">Cancel</button>
+    </div>
     <div id="tooltip" hidden></div>
     <div id="toasts"></div>
   </main>
@@ -46,8 +52,23 @@
       <div class="row">
         <button id="fertBtn" title="Boost growth for 45 days. Don't overdo it.">Fertilize</button>
         <button id="undoBtn" title="Undo last action (Ctrl+Z). Also rewinds time.">Undo</button>
-        <button id="fitBtn" title="Fit tree to view (F)">Fit view</button>
       </div>
+    </section>
+
+    <section>
+      <h2>Roots</h2>
+      <p id="nebariHint" class="muted hint"></p>
+      <div class="row"><button id="repotBtn">Repot</button></div>
+    </section>
+
+    <section>
+      <h2>View</h2>
+      <div class="row">
+        <button id="turnLeft" title="Turn the tree 45° (←)">⟲ 45°</button>
+        <button id="fitBtn" title="Fit the tree in view (F)">Fit</button>
+        <button id="turnRight" title="Turn the tree 45° (→)">45° ⟳</button>
+      </div>
+      <p class="muted hint">Drag to rotate · right-drag or shift-drag to pan · scroll to zoom · Q/E to tilt</p>
     </section>
 
     <section>
@@ -80,16 +101,18 @@
       <ul>
         <li><b>✂ Prune</b>: click anywhere on a branch or the trunk to cut it there. Everything shown in red is removed. Cutting the trunk's top makes a bud below take over as the new leader, which builds taper and movement.</li>
         <li><b>✋ Pinch</b>: click a growing tip to stop it from extending, or rub off a bud you don't want.</li>
-        <li><b>➰ Wire</b>: click a branch to wire it from that point to its tip, then drag the wired branch to bend it. Grab different points along it to add curves. Young shoots bend a lot; thick wood only a little. The bend sets over a growing season. Take the wire off too early and the unset part springs back; leave it on too long and it bites into the thickening branch and scars it. Click a wired branch to remove the wire.</li>
+        <li><b>➰ Wire</b>: click a branch or the trunk to wire it from that point to its tip, then drag a wired section to bend it: the section's tip follows your pointer, swinging about the section's base (marked with a white dot) in the plane facing you. Rotate the view and bend again to shape it in depth. Grab different points along it to add curves. Young shoots bend a lot; thick wood only a little. The bend sets over a growing season. Take the wire off too early and the unset part springs back; leave it on too long and it bites into the thickening branch and scars it. Click a wired branch to remove the wire.</li>
         <li><b>Buds</b>: <span class="dot bud"></span> dormant buds sit at nodes and wake up when the tips above them are removed. <span class="dot back"></span> <b>back buds</b> pop up on old wood, especially after pruning. They let you build fine branching (ramification) close to the trunk.</li>
         <li>Strong, unpruned shoots grow long and coarse with big leaves. Repeated cutting back gives short internodes, small leaves and dense twigs.</li>
-        <li>Shoots grow toward the light: up toward the sky and out toward gaps in the canopy, so most new branches angle upward or sideways. Wire them to place them where you want.</li>
+        <li>The tree grows in 3D: branches spiral around the trunk and can grow toward you, away from you, sideways, up or down. Drag to walk around the tree and check it from every side.</li>
+        <li>Shoots grow toward the light: up toward the sky and out toward gaps in the canopy, so most new branches angle upward or sideways.</li>
         <li><b>New tree</b> shows six random seedlings to choose from. Use <b>☆ Save form</b> on one you like, or <b>Save form</b> in the side panel to keep your current tree's shape, then plant copies of it from the <b>Saved forms</b> tab.</li>
         <li>The top and outer tips grow strongest. Crowded, shaded interior shoots weaken and die, so thin the canopy.</li>
         <li>Heavy pruning in spring and summer costs health. Do big cuts in late autumn and winter, while the tree is dormant.</li>
+        <li><b>Roots and nebari</b>: each main root thickens with the leaves on its side of the tree, so an even canopy builds an even nebari (the flare of surface roots). Roots fill the pot over two to three years and then growth slows. <b>Repot</b> between Feb 1 and Apr 10: the tree lifts out so you can cut the taproot or downward roots and swing roots into gaps around the trunk. Cut roots sprout new fine roots that spring. Cutting more than about a third of the root mass at once costs health. The <b>Nebari</b> score rates the spread and thickness of the surface roots.</li>
         <li>Wood thickens with the leaf mass it feeds, so each part of the trunk thickens according to the branches above it. Let the tree grow wild to fatten the trunk, or leave one low <b>sacrifice branch</b> unpruned to thicken the trunk below it, then cut it off.</li>
       </ul>
-      <p class="muted">Keys: Space pause · 1 prune · 2 pinch · 3 wire · Ctrl+Z undo · F fit · scroll to zoom · drag to pan. Progress saves automatically in your browser (time stops while the game is closed); use Export for a backup file.</p>
+      <p class="muted">Controls: drag to rotate · right-drag or shift-drag to pan · scroll to zoom · Q/E tilt · ←/→ turn 45° · F fit. Keys: Space pause · 1 prune · 2 pinch · 3 wire · Ctrl+Z undo. Progress saves automatically in your browser (time stops while the game is closed); use Export for a backup file.</p>
       <div class="row"><button id="helpClose" class="primary">Start growing</button></div>
     </div>
   </div>
@@ -97,13 +120,14 @@
   <div id="picker" class="modal" hidden>
     <div class="card wide">
       <div class="picker-head">
-        <h2>Choose your next tree</h2>
+        <h2 id="pickerTitle">Choose your next tree</h2>
         <div class="seg" id="pickerTabs">
           <button data-tab="new">New seedlings</button>
           <button data-tab="saved">Saved forms<span id="savedCount"></span></button>
         </div>
       </div>
       <p class="muted">Planting replaces your current tree. Save its form or Export it first if you want to keep it.</p>
+      <div id="pickerPot" class="picker-pot" hidden>Pot: <b id="pickerPotName"></b> <button id="changePot" class="link">Change pot</button></div>
       <div id="pickerGrid" class="grid"></div>
       <div class="row picker-foot">
         <button id="pickerMore">↻ Generate 6 more</button>
@@ -120,7 +144,9 @@
     </div>
   </div>
 
+  <script src="lib/three.min.js"></script>
   <script src="sim.js"></script>
+  <script src="render3d.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
