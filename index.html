@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bonsai</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="stage">
+    <canvas id="canvas"></canvas>
+    <div id="tooltip" hidden></div>
+    <div id="toasts"></div>
+  </main>
+
+  <aside id="panel">
+    <header>
+      <h1>Bonsai</h1>
+      <button id="helpBtn" class="ghost" title="How to play">?</button>
+    </header>
+
+    <section class="time">
+      <div class="season-row"><span id="season">Winter</span><span id="date"></span></div>
+      <div id="yearDay" class="muted"></div>
+      <div class="bar"><div id="yearBar"></div></div>
+      <div class="months"><span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span></div>
+    </section>
+
+    <section>
+      <h2>Time</h2>
+      <div class="seg" id="speeds">
+        <button data-speed="0" title="Pause (Space)">❚❚</button>
+        <button data-speed="1" title="1 day per second">1d/s</button>
+        <button data-speed="7" title="1 week per second">1w/s</button>
+        <button data-speed="30" title="1 month per second">1m/s</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tools</h2>
+      <div class="seg" id="tools">
+        <button data-tool="prune" title="Cut a branch or the trunk where you click (1)">✂ Prune</button>
+        <button data-tool="pinch" title="Pinch out a growing tip or rub off a bud (2)">✋ Pinch</button>
+        <button data-tool="wire" title="Wire a branch, then drag it to bend (3)">➰ Wire</button>
+      </div>
+      <div class="row">
+        <button id="fertBtn" title="Boost growth for 45 days. Don't overdo it.">Fertilize</button>
+        <button id="undoBtn" title="Undo last action (Ctrl+Z). Also rewinds time.">Undo</button>
+        <button id="fitBtn" title="Fit tree to view (F)">Fit view</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tree</h2>
+      <dl id="stats"></dl>
+      <div class="meter"><span>Health</span><div class="bar"><div id="healthBar"></div></div></div>
+    </section>
+
+    <section>
+      <h2>Progress</h2>
+      <div class="row">
+        <button id="saveBtn">Save</button>
+        <button id="exportBtn" title="Download save file">Export</button>
+        <button id="importBtn" title="Load a save file">Import</button>
+      </div>
+      <div class="row">
+        <button id="newBtn" title="Pick a new seedling or start from a saved form">New tree</button>
+        <button id="saveFormBtn" title="Save this tree's current shape so you can start new trees from it">Save form</button>
+      </div>
+      <p id="saved" class="muted"></p>
+      <input id="importFile" type="file" accept=".json,application/json" hidden>
+    </section>
+  </aside>
+
+  <div id="help" class="modal" hidden>
+    <div class="card">
+      <h2>Growing your bonsai</h2>
+      <p>You start with a two-year-old Japanese maple seedling on January 1. Time runs fast; a year passes in about 12 seconds at the fastest speed. Shape the tree by deciding where it is allowed to grow.</p>
+      <p>The calendar follows a Japanese maple in the Pacific Northwest: dormant December to February, buds break in late March, strong growth April to June, shoots harden in July and August, leaves color in October and are down by late November.</p>
+      <ul>
+        <li><b>✂ Prune</b>: click anywhere on a branch or the trunk to cut it there. Everything shown in red is removed. Cutting the trunk's top makes a bud below take over as the new leader, which builds taper and movement.</li>
+        <li><b>✋ Pinch</b>: click a growing tip to stop it from extending, or rub off a bud you don't want.</li>
+        <li><b>➰ Wire</b>: click a branch to wire it from that point to its tip, then drag the wired branch to bend it. Grab different points along it to add curves. Young shoots bend a lot; thick wood only a little. The bend sets over a growing season. Take the wire off too early and the unset part springs back; leave it on too long and it bites into the thickening branch and scars it. Click a wired branch to remove the wire.</li>
+        <li><b>Buds</b>: <span class="dot bud"></span> dormant buds sit at nodes and wake up when the tips above them are removed. <span class="dot back"></span> <b>back buds</b> pop up on old wood, especially after pruning. They let you build fine branching (ramification) close to the trunk.</li>
+        <li>Strong, unpruned shoots grow long and coarse with big leaves. Repeated cutting back gives short internodes, small leaves and dense twigs.</li>
+        <li>Shoots grow toward the light: up toward the sky and out toward gaps in the canopy, so most new branches angle upward or sideways. Wire them to place them where you want.</li>
+        <li><b>New tree</b> shows six random seedlings to choose from. Use <b>☆ Save form</b> on one you like, or <b>Save form</b> in the side panel to keep your current tree's shape, then plant copies of it from the <b>Saved forms</b> tab.</li>
+        <li>The top and outer tips grow strongest. Crowded, shaded interior shoots weaken and die, so thin the canopy.</li>
+        <li>Heavy pruning in spring and summer costs health. Do big cuts in late autumn and winter, while the tree is dormant.</li>
+        <li>Wood thickens with the leaf mass it feeds, so each part of the trunk thickens according to the branches above it. Let the tree grow wild to fatten the trunk, or leave one low <b>sacrifice branch</b> unpruned to thicken the trunk below it, then cut it off.</li>
+      </ul>
+      <p class="muted">Keys: Space pause · 1 prune · 2 pinch · 3 wire · Ctrl+Z undo · F fit · scroll to zoom · drag to pan. Progress saves automatically in your browser (time stops while the game is closed); use Export for a backup file.</p>
+      <div class="row"><button id="helpClose" class="primary">Start growing</button></div>
+    </div>
+  </div>
+
+  <div id="picker" class="modal" hidden>
+    <div class="card wide">
+      <div class="picker-head">
+        <h2>Choose your next tree</h2>
+        <div class="seg" id="pickerTabs">
+          <button data-tab="new">New seedlings</button>
+          <button data-tab="saved">Saved forms<span id="savedCount"></span></button>
+        </div>
+      </div>
+      <p class="muted">Planting replaces your current tree. Save its form or Export it first if you want to keep it.</p>
+      <div id="pickerGrid" class="grid"></div>
+      <div class="row picker-foot">
+        <button id="pickerMore">↻ Generate 6 more</button>
+        <button id="pickerClose">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deadModal" class="modal" hidden>
+    <div class="card">
+      <h2>Your tree has died</h2>
+      <p>Too little foliage was left to keep it alive. Bonsai need enough leaves to feed the roots. Prune in stages and give the tree time to recover.</p>
+      <div class="row"><button id="deadUndo">Undo last action</button><button id="deadNew" class="primary">Plant a new tree</button></div>
+    </div>
+  </div>
+
+  <script src="sim.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
